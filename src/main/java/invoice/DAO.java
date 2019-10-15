@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
@@ -76,9 +77,69 @@ public class DAO {
 	 * taille
 	 * @throws java.lang.Exception si la transaction a échoué
 	 */
-	public void createInvoice(CustomerEntity customer, int[] productIDs, int[] quantities)
-		throws Exception {
-		throw new UnsupportedOperationException("Pas encore implémenté");
+	public void createInvoice(CustomerEntity customer, int[] productIDs, int[] quantities) throws Exception{
+            
+            String sql = "INSERT INTO Invoice (CustomerID) VALUES (?)";
+            String sql2 = "INSERT INTO Item Values(?,?,?,?,?)";
+            String sql3 = "SELECT Price AS p FROM Product WHERE ID = ?";
+            
+            try (Connection connection = myDataSource.getConnection();
+		PreparedStatement invStmt = connection.prepareStatement(sql,Statement.RETURN_GENERATED_KEYS);
+                PreparedStatement itStmt = connection.prepareStatement(sql2);
+                PreparedStatement prodStmt = connection.prepareStatement(sql3)){
+                connection.setAutoCommit(false);
+                //Creation Invoice
+                try{
+                        invStmt.setInt(1,customer.getCustomerId());
+                    int result = invStmt.executeUpdate();
+
+                    if (result == 0) throw new Exception();
+
+                    ResultSet keys = invStmt.getGeneratedKeys();
+
+                    keys.next();
+
+                    int key = keys.getInt(1);
+
+                    //Creation Items
+
+                    for(int i = 0; i < productIDs.length;i++){
+
+                        itStmt.clearParameters();
+                        prodStmt.clearParameters();
+
+                        prodStmt.setInt(1, productIDs[i]);
+                        ResultSet resultProd = prodStmt.executeQuery();
+                        resultProd.next();
+
+                        float price = resultProd.getInt("p");
+                        itStmt.setInt(1,key);
+                        itStmt.setInt(2, i);
+                        itStmt.setInt(3,productIDs[i]);
+                        itStmt.setInt(4,quantities[i]);
+                        itStmt.setFloat(5, price);
+                        
+                        int rU = itStmt.executeUpdate();
+                        
+                        if (rU == 0) throw new Exception();
+                    }
+                    
+                    connection.commit();
+                } catch (Exception ex) {
+                        connection.rollback(); // On annule la transaction
+                        throw ex;       
+                } finally {
+                         // On revient au mode de fonctionnement sans transaction
+                        connection.setAutoCommit(true);				
+                }
+            }
+
+            
+            
+            
+            sql = "INSERT INTO Item VALUES(?,?,?,?,?)";
+            
+		
 	}
 
 	/**
@@ -146,6 +207,32 @@ public class DAO {
 		}
 		return result;
 	}
+        
+        ArrayList<InvoiceEntity> invoicesOfCustomer(int customerId) throws SQLException{
+            ArrayList<InvoiceEntity> invoices = new ArrayList<InvoiceEntity>();
+            String sql = "SELECT * FROM Invoice WHERE CustomerId = ?";
+            InvoiceEntity inv;
+            try (Connection connection = myDataSource.getConnection(); 
+                 PreparedStatement stmt = connection.prepareStatement(sql)){
+                
+                stmt.setInt(1, customerId);
+                
+                ResultSet rs = stmt.executeQuery();
+                
+                while(rs.next()){
+                    inv = new InvoiceEntity(rs.getInt("ID"), customerId, rs.getFloat("Total"));
+                    invoices.add(inv);
+                }
+            }
+            
+            return invoices;
+        }
+        
+        //TODO
+        public void itemsOfInvoice(){
+            
+        }
+                
 
 	/**
 	 * Liste des clients localisés dans un état des USA

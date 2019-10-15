@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import javax.sql.DataSource;
 import org.hsqldb.cmdline.SqlFile;
 import org.hsqldb.cmdline.SqlToolError;
@@ -93,6 +94,23 @@ public class TransactionTest {
 
 		assertEquals(before + 2f * 10f, after, 0.001f);		
 	}
+        
+        @Test @Ignore
+        public void addsInvoiceToDB() throws Exception {
+            int id = myCustomer.getCustomerId();
+            
+            // Un tableau de 3 productID
+            int[] productIds = new int[]{0,1,2};
+            // Un tableau de 3 quantites
+            int[] quantities = new int[]{10, 10, 10};
+            
+            myDAO.createInvoice(myCustomer, productIds, quantities);
+            
+            ArrayList<InvoiceEntity> listOfInvoices = myDAO.invoicesOfCustomer(id);
+            
+            assertEquals(1,listOfInvoices.size());
+            assertEquals(600,listOfInvoices.get(0).getTotal(),0.001f);
+        }
 	
 
 	
