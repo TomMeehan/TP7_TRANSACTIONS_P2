@@ -134,12 +134,6 @@ public class DAO {
                 }
             }
 
-            
-            
-            
-            sql = "INSERT INTO Item VALUES(?,?,?,?,?)";
-            
-		
 	}
 
 	/**
