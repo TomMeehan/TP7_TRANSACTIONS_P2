@@ -208,32 +208,6 @@ public class DAO {
 		return result;
 	}
         
-        ArrayList<InvoiceEntity> invoicesOfCustomer(int customerId) throws SQLException{
-            ArrayList<InvoiceEntity> invoices = new ArrayList<InvoiceEntity>();
-            String sql = "SELECT * FROM Invoice WHERE CustomerId = ?";
-            InvoiceEntity inv;
-            try (Connection connection = myDataSource.getConnection(); 
-                 PreparedStatement stmt = connection.prepareStatement(sql)){
-                
-                stmt.setInt(1, customerId);
-                
-                ResultSet rs = stmt.executeQuery();
-                
-                while(rs.next()){
-                    inv = new InvoiceEntity(rs.getInt("ID"), customerId, rs.getFloat("Total"));
-                    invoices.add(inv);
-                }
-            }
-            
-            return invoices;
-        }
-        
-        //TODO
-        public void itemsOfInvoice(){
-            
-        }
-                
-
 	/**
 	 * Liste des clients localisés dans un état des USA
 	 *

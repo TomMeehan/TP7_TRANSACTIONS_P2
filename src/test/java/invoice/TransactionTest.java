@@ -95,21 +95,70 @@ public class TransactionTest {
 		assertEquals(before + 2f * 10f, after, 0.001f);		
 	}
         
-        @Test @Ignore
-        public void addsInvoiceToDB() throws Exception {
+        @Test
+        public void productIdUnknown() throws Exception {
             int id = myCustomer.getCustomerId();
+            
+            float before = myDAO.totalForCustomer(id);
+            
+            // Un tableau de 3 productID
+            int[] productIds = new int[]{0,1,4};
+            // Un tableau de 3 quantites
+            int[] quantities = new int[]{10, 10, 10};
+            
+            try{
+                myDAO.createInvoice(myCustomer, productIds, quantities);
+                fail("On doit avoir une exception");
+            }catch(Exception e){}
+            
+            float after = myDAO.totalForCustomer(id);
+            
+            assertEquals(before, after, 0.001f);	
+            
+        }
+        
+        @Test 
+        public void customerUnknown() throws Exception {
+            
+            int id = 1;
+            
+            float before = myDAO.totalForCustomer(id);
             
             // Un tableau de 3 productID
             int[] productIds = new int[]{0,1,2};
             // Un tableau de 3 quantites
             int[] quantities = new int[]{10, 10, 10};
             
-            myDAO.createInvoice(myCustomer, productIds, quantities);
+            try{
+                myDAO.createInvoice(new CustomerEntity(id,"Jean","Bon"), productIds, quantities);
+                fail("On doit avoir une exception");
+            }catch(Exception e){}
             
-            ArrayList<InvoiceEntity> listOfInvoices = myDAO.invoicesOfCustomer(id);
+            float after = myDAO.totalForCustomer(id);
             
-            assertEquals(1,listOfInvoices.size());
-            assertEquals(600,listOfInvoices.get(0).getTotal(),0.001f);
+            assertEquals(before, after, 0.001f);
+        }
+        
+        @Test
+        public void negativeQuantities() throws Exception {
+            
+            int id = myCustomer.getCustomerId();
+            
+            float before = myDAO.totalForCustomer(id);
+            
+            // Un tableau de 3 productID
+            int[] productIds = new int[]{0,1,2};
+            // Un tableau de 3 quantites
+            int[] quantities = new int[]{10, -10, 10};
+            
+            try{
+                myDAO.createInvoice(myCustomer, productIds, quantities);
+                fail("On doit avoir une exception");
+            }catch(Exception e){}
+            
+            float after = myDAO.totalForCustomer(id);
+            
+            assertEquals(before, after, 0.001f);
         }
 	
 
